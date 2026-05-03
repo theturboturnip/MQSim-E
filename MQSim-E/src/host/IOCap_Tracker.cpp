@@ -40,6 +40,9 @@ namespace Host_Components
                     STAT_total_lease_ids_required_for_total_availability = lease_statuses.size();
                 }
             }
+            if (lease_to_use->all_command_submit_times.size() >= n_ops_per_lease){
+                throw std::logic_error("pushing lease past limit");
+            }
             // lease_to_use is non-NULL
             if (!lease_to_use->is_open()) {
                 STAT_total_lease_openings++;
@@ -51,6 +54,8 @@ namespace Host_Components
                 // and indeed keeping this pointer alive even if the lease it points to is closed,
                 // could end up lowering average occupancy-on-close?
                 next_lease = lease_to_use;
+            } else {
+                next_lease = nullptr;
             }
             outstanding_commands[combined_id] = lease_to_use->id;
         }
@@ -107,6 +112,10 @@ namespace Host_Components
 
 		std::string attr = "Name";
 		std::string val = ID();
+		xmlwriter.Write_attribute_string(attr, val);
+
+		attr = "N_Ops_Per_Lease";
+		val = std::to_string(n_ops_per_lease);
 		xmlwriter.Write_attribute_string(attr, val);
 
 		attr = "Sum_Time_Exposed";
