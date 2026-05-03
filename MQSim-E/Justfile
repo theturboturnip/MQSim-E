@@ -7,10 +7,10 @@ build:
     make
 
 bench n:
-    ./MQSim -i {{ssd}} -w workload_config/iocap/synth_{{n}}.xml -o results/iocap/run{{n}} 1>results/iocap/run{{n}}_stdout.txt
+    ./MQSim -i {{ssd}} -w workload_config/iocap/synth_{{n}}.xml -o results/iocap-raw/run{{n}} 1>results/iocap-raw/run{{n}}_stdout.txt
 
 bench-all: build
-    mkdir -p results/iocap
+    mkdir -p results/iocap-raw
     just bench 1per
     just bench 2per
     just bench 2per_readonly
@@ -24,4 +24,5 @@ bench-all: build
     just bench 64per
 
 report:
-    uv run tomlize_results.py --toml ./results/iocap/mqsim-e-results.toml ./results/iocap/run*.xml
+    mkdir -p results/iocap
+    uv run tomlize_results.py --toml ./results/iocap/mqsim-e-results.toml ./results/iocap-raw/run*.xml

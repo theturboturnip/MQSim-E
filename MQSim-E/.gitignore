@@ -1,4 +1,4 @@
 *.pdb
 MQSim
 build/*
-results/
+results/iocap-raw
