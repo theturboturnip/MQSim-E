@@ -26,7 +26,7 @@
 			<Average_No_of_Reqs_in_Queue>32</Average_No_of_Reqs_in_Queue>
 			<Intensity>4096</Intensity> <!--32768-->
 			<Stop_Time>0</Stop_Time>
-			<Total_Requests_To_Generate>400000</Total_Requests_To_Generate>
+			<Total_Requests_To_Generate>4000000</Total_Requests_To_Generate>
 			<IOCap_Tracker_Index>0</IOCap_Tracker_Index>
 		</IO_Flow_Parameter_Set_Synthetic>
 	</IO_Scenario>
