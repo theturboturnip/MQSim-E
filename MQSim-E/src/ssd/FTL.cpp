@@ -990,19 +990,21 @@ namespace SSD_Components
 		val = std::to_string(Stats::Additional_WAF_by_mapping);
 		xmlwriter.Write_attribute_string_inline(attr, val);
 
-		unsigned int index;
-		attr = "WAI";
-		xmlwriter.Write_attribute(attr);
-		for (index = 0; index < Stats::WAF_index; index++){	
-			val = std::to_string(Stats::WAI[index]);
-			xmlwriter.Write_string(val);
-		}
-
-		attr = "WAF";
-		xmlwriter.Write_attribute(attr);
-		for (index = 0; index < Stats::WAF_index; index++){	
-			val = std::to_string(Stats::WAF[index]);
-			xmlwriter.Write_string(val);
+		if (Stats::WAF_index > 0) {
+    		unsigned int index;
+    		attr = "WAI";
+    		xmlwriter.Write_attribute(attr);
+    		for (index = 0; index < Stats::WAF_index; index++){	
+    			val = std::to_string(Stats::WAI[index]);
+    			xmlwriter.Write_string(val);
+    		}
+    
+    		attr = "WAF";
+    		xmlwriter.Write_attribute(attr);
+    		for (index = 0; index < Stats::WAF_index; index++){	
+    			val = std::to_string(Stats::WAF[index]);
+    			xmlwriter.Write_string(val);
+    		}
 		}
 		
 		attr = "Max_consecutive_gc_write";
