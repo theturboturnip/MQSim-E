@@ -1,4 +1,4 @@
-ssd := "ssd_config/ssd_16_16_f1_nopre.xml"
+ssd := "ssd_config/ssd_C8_P4_64G.xml"
 
 default:
     @just --list
@@ -9,7 +9,7 @@ build:
 bench n:
     ./MQSim -i {{ssd}} -w workload_config/iocap/synth_{{n}}per.xml -o results/iocap/run{{n}} 1>results/iocap/run{{n}}_stdout.txt
 
-run-iocap-benchmarks: build
+bench-all: build
     mkdir -p results/iocap
     just bench 1
     just bench 2
@@ -18,3 +18,6 @@ run-iocap-benchmarks: build
     just bench 16
     just bench 32
     just bench 64
+
+report:
+    uv run tomlize_results.py --toml ./results/iocap/mqsim-e-results.toml ./results/iocap/run*.xml
