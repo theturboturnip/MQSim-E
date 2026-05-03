@@ -5,6 +5,7 @@
 #include <cstring>
 #include <vector>
 #include "exec/IOCap_Tracker_Parameter_Set.h"
+#include "sim/Sim_Defs.h"
 #include "ssd/SSD_Defs.h"
 #include "exec/Execution_Parameter_Set.h"
 #include "exec/SSD_Device.h"
@@ -15,10 +16,10 @@
 using namespace std;
 
 
-void command_line_args(char* argv[], string& input_file_path, string& workload_file_path)
+void command_line_args(char* argv[], string& input_file_path, string& workload_file_path, string& output_file_path)
 {
 
-	for (int arg_cntr = 1; arg_cntr < 5; arg_cntr++) {
+	for (int arg_cntr = 1; arg_cntr < 7; arg_cntr++) {
 		string arg = argv[arg_cntr];
 
 		char file_path_switch[] = "-i";
@@ -31,6 +32,13 @@ void command_line_args(char* argv[], string& input_file_path, string& workload_f
 		char workload_path_switch[] = "-w";
 		if (arg.compare(0, strlen(workload_path_switch), workload_path_switch) == 0) {
 			workload_file_path.assign(argv[++arg_cntr]);
+			//cout << workload_file_path << endl;
+			continue;
+		}
+
+		char output_path_switch[] = "-o";
+		if (arg.compare(0, strlen(output_path_switch), output_path_switch) == 0) {
+			output_file_path.assign(argv[++arg_cntr]);
 			//cout << workload_file_path << endl;
 			continue;
 		}
@@ -221,7 +229,7 @@ std::vector<Workload*>* read_workload_definitions(const string workload_defs_fil
 		IOCap_Tracker_Parameter_Set* iocap_tracker = new IOCap_Tracker_Parameter_Set;
 		iocap_tracker->n_ops_per_lease = 1; // Ideal case
 		scenario_iocaps.push_back(iocap_tracker);
-		
+
 		io_scenarios->push_back(new Workload {
 		    .iocaps = std::move(scenario_iocaps),
 		    .flows = std::move(scenario_flows),
@@ -255,7 +263,7 @@ void collect_results(SSD_Device& ssd, Host_System& host, const char* output_file
 
 	std::string tmp("MQSim_Results");
 	xmlwriter.Write_open_tag(tmp);
-	
+
 	host.Report_results_in_XML("", xmlwriter);
 	ssd.Report_results_in_XML("", xmlwriter);
 
@@ -267,7 +275,7 @@ void collect_results(SSD_Device& ssd, Host_System& host, const char* output_file
 			<< " total requests serviced:" << IO_flows[stream_id]->Get_serviced_request_count() << endl;
 		cout << "                   - device response time: " << IO_flows[stream_id]->Get_device_response_time() << " (us)"
 			<< " end-to-end request delay:" << IO_flows[stream_id]->Get_end_to_end_request_delay() << " (us)" << endl;
-		cout << "JS_output, " << IO_flows[stream_id]->ID().substr(IO_flows[stream_id]->ID().find_last_of("/")+1, IO_flows[stream_id]->ID().find_last_of(".")-IO_flows[stream_id]->ID().find_last_of("/")-1) << ", " 
+		cout << "JS_output, " << IO_flows[stream_id]->ID().substr(IO_flows[stream_id]->ID().find_last_of("/")+1, IO_flows[stream_id]->ID().find_last_of(".")-IO_flows[stream_id]->ID().find_last_of("/")-1) << ", "
 			<< IO_flows[stream_id]->Get_device_response_time() << ", "
 			<< IO_flows[stream_id]->Get_read_device_response_time() << ", "
 			<< IO_flows[stream_id]->Get_max_read_response_time() << ", "
@@ -278,7 +286,7 @@ void collect_results(SSD_Device& ssd, Host_System& host, const char* output_file
 			<< IO_flows[stream_id]->Get_Bandwidth()<< ", "
 			<< IO_flows[stream_id]->Get_Read_Bandwidth() << ", "
 			<< IO_flows[stream_id]->Get_Write_Bandwidth()
-			<< std::endl; 
+			<< std::endl;
 	}
 }
 
@@ -286,16 +294,20 @@ void collect_results(SSD_Device& ssd, Host_System& host, const char* output_file
 
 int main(int argc, char* argv[])
 {
-	string ssd_config_file_path, workload_defs_file_path;
-	if (argc != 5) {
-		// MQSim expects 2 arguments: 1) the path to the SSD configuration definition file, and 2) the path to the workload definition file
+	string ssd_config_file_path, workload_defs_file_path, output_file_path;
+	if (argc != 7) {
+		// MQSim expects 3 arguments: 1) the path to the SSD configuration definition file, 2) the path to the workload definition file, and 3) the output path
 		//print_help();
 		cout << "MQSim - SSD simulator with both NVMe and SATA host interface behavior, see ReadMe.md for details" << endl <<
-			"Standalone Usage:" << endl << "./MQSim [-i path/to/config/file] [-w path/to/workload/file]" << endl;
+			"Standalone Usage:" << endl << "./MQSim [-i path/to/config/file] [-w path/to/workload/file] -o output_file" << endl;
 		return 1;
 	}
 
-	command_line_args(argv, ssd_config_file_path, workload_defs_file_path);
+	command_line_args(argv, ssd_config_file_path, workload_defs_file_path, output_file_path);
+
+	if (output_file_path.empty()) {
+	    PRINT_ERROR("no output file path supplied!");
+	}
 
 	Execution_Parameter_Set* exec_params = new Execution_Parameter_Set;
 	read_configuration_parameters(ssd_config_file_path, exec_params);
@@ -316,7 +328,7 @@ int main(int argc, char* argv[])
 		for (auto iocap_tracker : (*io_scen)->iocaps) {
 			exec_params->Host_Configuration.IOCap_Tracker_Definitions.push_back(iocap_tracker);
 		}
-		
+
 		exec_params->Host_Configuration.IO_Flow_Definitions.clear();
 		for (auto io_flow_def : (*io_scen)->flows) {
 			exec_params->Host_Configuration.IO_Flow_Definitions.push_back(io_flow_def);
@@ -324,6 +336,7 @@ int main(int argc, char* argv[])
 
 		SSD_Device ssd(&exec_params->SSD_Device_Configuration, &exec_params->Host_Configuration.IO_Flow_Definitions);//Create SSD_Device based on the specified parameters
 		exec_params->Host_Configuration.Input_file_path = workload_defs_file_path.substr(0, workload_defs_file_path.find_last_of("."));//Create Host_System based on the specified parameters
+		exec_params->Host_Configuration.Output_file_path = output_file_path;//Create Host_System based on the specified parameters
 		Host_System host(&exec_params->Host_Configuration, exec_params->SSD_Device_Configuration.Enabled_Preconditioning, ssd.Host_interface);
 		host.Attach_ssd_device(&ssd);
 
@@ -337,7 +350,7 @@ int main(int argc, char* argv[])
 		PRINT_MESSAGE("");
 
 		PRINT_MESSAGE("Writing results to output file .......");
-		collect_results(ssd, host, (workload_defs_file_path.substr(0, workload_defs_file_path.find_last_of(".")) + "_scenario_" + std::to_string(cntr) + ".xml").c_str());
+		collect_results(ssd, host, (output_file_path + "_scenario_" + std::to_string(cntr) + ".xml").c_str());
 	}
     cout << "Simulation complete; Press any key to exit." << endl;
 
