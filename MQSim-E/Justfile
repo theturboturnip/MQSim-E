@@ -1,0 +1,20 @@
+ssd := "ssd_config/ssd_16_16_f1_nopre.xml"
+
+default:
+    @just --list
+
+build:
+    make
+
+bench n:
+    ./MQSim -i {{ssd}} -w workload_config/iocap/synth_{{n}}per.xml -o results/iocap/run{{n}} 1>results/iocap/run{{n}}_stdout.txt
+
+run-iocap-benchmarks: build
+    mkdir -p results/iocap
+    just bench 1
+    just bench 2
+    just bench 4
+    just bench 8
+    just bench 16
+    just bench 32
+    just bench 64
