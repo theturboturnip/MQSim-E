@@ -88,6 +88,10 @@ void IO_Flow_Parameter_Set::XML_serialize(Utils::XmlWriter& xmlwriter)
 	attr = "Initial_Occupancy_Percentage";
 	val = std::to_string(Initial_Occupancy_Percentage);
 	xmlwriter.Write_attribute_string(attr, val);
+
+	attr = "IOCap_Tracker_Index";
+	val = std::to_string(IOCap_Tracker_Index);
+	xmlwriter.Write_attribute_string(attr, val);
 }
 
 void IO_Flow_Parameter_Set::XML_deserialize(rapidxml::xml_node<> *node)
@@ -211,6 +215,9 @@ void IO_Flow_Parameter_Set::XML_deserialize(rapidxml::xml_node<> *node)
 			} else if (strcmp(param->name(), "Initial_Occupancy_Percentage") == 0) {
 				std::string val = param->value();
 				Initial_Occupancy_Percentage = std::stoul(val);
+			} else if (strcmp(param->name(), "IOCap_Tracker_Index") == 0) {
+				std::string val = param->value();
+				IOCap_Tracker_Index = std::stoul(val);
 			}
 		}
 	} catch (...) {

@@ -2,6 +2,7 @@
 #define HOST_PARAMETER_SEt_H
 
 #include <vector>
+#include "IOCap_Tracker_Parameter_Set.h"
 #include "Parameter_Set_Base.h"
 #include "IO_Flow_Parameter_Set.h"
 
@@ -13,6 +14,7 @@ public:
 	static sim_time_type SATA_Processing_Delay;//The overall hardware and software processing delay to send/receive a SATA message in nanoseconds
 	static bool Enable_ResponseTime_Logging;
 	static sim_time_type ResponseTime_Logging_Period_Length;
+	static std::vector<IOCap_Tracker_Parameter_Set*> IOCap_Tracker_Definitions;
 	static std::vector<IO_Flow_Parameter_Set*> IO_Flow_Definitions;
 	static std::string Input_file_path;//This parameter is not serialized. This is used to inform the Host_System class about the input file path.
 

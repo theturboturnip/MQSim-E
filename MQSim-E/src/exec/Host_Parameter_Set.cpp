@@ -1,5 +1,6 @@
 #include <algorithm>
 #include "Host_Parameter_Set.h"
+#include "IOCap_Tracker_Parameter_Set.h"
 
 
 double Host_Parameter_Set::PCIe_Lane_Bandwidth = 0.4;//uint is GB/s
@@ -8,6 +9,7 @@ sim_time_type Host_Parameter_Set::SATA_Processing_Delay;//The overall hardware a
 bool Host_Parameter_Set::Enable_ResponseTime_Logging = false;
 sim_time_type Host_Parameter_Set::ResponseTime_Logging_Period_Length = 400000;//nanoseconds
 std::string Host_Parameter_Set::Input_file_path;
+std::vector<IOCap_Tracker_Parameter_Set*> Host_Parameter_Set::IOCap_Tracker_Definitions;
 std::vector<IO_Flow_Parameter_Set*> Host_Parameter_Set::IO_Flow_Definitions;
 
 void Host_Parameter_Set::XML_serialize(Utils::XmlWriter& xmlwriter)

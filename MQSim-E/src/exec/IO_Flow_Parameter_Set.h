@@ -24,6 +24,7 @@ public:
 	unsigned int Initial_Occupancy_Percentage;//Percentage of the logical space that is written when preconditioning is performed
 	int Channel_No, Chip_No, Die_No, Plane_No;
 	unsigned int Relief_Type; // temporal info
+	unsigned int IOCap_Tracker_Index; // which IOCap Tracker do you use
 	void XML_serialize(Utils::XmlWriter& xmlwrite);
 	void XML_deserialize(rapidxml::xml_node<> *node);
 private:

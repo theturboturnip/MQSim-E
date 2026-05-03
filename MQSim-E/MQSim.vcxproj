@@ -25,7 +25,9 @@
     <ClCompile Include="src\exec\Host_Parameter_Set.cpp" />
     <ClCompile Include="src\exec\Host_System.cpp" />
     <ClCompile Include="src\exec\IO_Flow_Parameter_Set.cpp" />
+    <ClCompile Include="src\exec\IOCap_Tracker_Parameter_Set.cpp" />
     <ClCompile Include="src\exec\SSD_Device.cpp" />
+    <ClCompile Include="src\host\IOCap_Tracker.cpp" />
     <ClCompile Include="src\host\IO_Flow_Base.cpp" />
     <ClCompile Include="src\host\IO_Flow_Synthetic.cpp" />
     <ClCompile Include="src\host\IO_Flow_Trace_Based.cpp" />

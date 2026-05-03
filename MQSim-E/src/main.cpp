@@ -3,6 +3,8 @@
 #include <ctime>
 #include <string>
 #include <cstring>
+#include <vector>
+#include "exec/IOCap_Tracker_Parameter_Set.h"
 #include "ssd/SSD_Defs.h"
 #include "exec/Execution_Parameter_Set.h"
 #include "exec/SSD_Device.h"
@@ -85,9 +87,14 @@ void read_configuration_parameters(const string ssd_config_file_path, Execution_
 	ssd_config_file.close();
 }
 
-std::vector<std::vector<IO_Flow_Parameter_Set*>*>* read_workload_definitions(const string workload_defs_file_path)
+struct Workload {
+    std::vector<IOCap_Tracker_Parameter_Set*> iocaps;
+    std::vector<IO_Flow_Parameter_Set*> flows;
+};
+
+std::vector<Workload*>* read_workload_definitions(const string workload_defs_file_path)
 {
-	std::vector<std::vector<IO_Flow_Parameter_Set*>*>* io_scenarios = new std::vector<std::vector<IO_Flow_Parameter_Set*>*>;
+	std::vector<Workload*>* io_scenarios = new std::vector<Workload*>;
 
 	ifstream workload_defs_file;
 	workload_defs_file.open(workload_defs_file_path.c_str());
@@ -108,17 +115,21 @@ std::vector<std::vector<IO_Flow_Parameter_Set*>*>* read_workload_definitions(con
 			rapidxml::xml_node<> *mqsim_io_scenarios = doc.first_node("MQSim_IO_Scenarios");
 			if (mqsim_io_scenarios != NULL) {
 				for (auto xml_io_scenario = mqsim_io_scenarios->first_node("IO_Scenario"); xml_io_scenario; xml_io_scenario = xml_io_scenario->next_sibling("IO_Scenario")) {
-					std::vector<IO_Flow_Parameter_Set*>* scenario_definition = new std::vector<IO_Flow_Parameter_Set*>;
-					for (auto flow_def = xml_io_scenario->first_node(); flow_def; flow_def = flow_def->next_sibling()) {
-						IO_Flow_Parameter_Set* flow;
-						if (strcmp(flow_def->name(), "IO_Flow_Parameter_Set_Synthetic") == 0) {
-							flow = new IO_Flow_Parameter_Set_Synthetic;
-							((IO_Flow_Parameter_Set_Synthetic*)flow)->XML_deserialize(flow_def);
-						} else if (strcmp(flow_def->name(), "IO_Flow_Parameter_Set_Trace_Based") == 0) {
-							flow = new IO_Flow_Parameter_Set_Trace_Based;
-							((IO_Flow_Parameter_Set_Trace_Based*)flow)->XML_deserialize(flow_def);
+					Workload* scenario_definition = new Workload();
+					for (auto scenario_item_def = xml_io_scenario->first_node(); scenario_item_def; scenario_item_def = scenario_item_def->next_sibling()) {
+						if (strcmp(scenario_item_def->name(), "IO_Flow_Parameter_Set_Synthetic") == 0) {
+							IO_Flow_Parameter_Set_Synthetic* flow = new IO_Flow_Parameter_Set_Synthetic;
+							flow->XML_deserialize(scenario_item_def);
+							scenario_definition->flows.push_back(flow);
+						} else if (strcmp(scenario_item_def->name(), "IO_Flow_Parameter_Set_Trace_Based") == 0) {
+							IO_Flow_Parameter_Set_Trace_Based* flow = new IO_Flow_Parameter_Set_Trace_Based;
+							flow->XML_deserialize(scenario_item_def);
+							scenario_definition->flows.push_back(flow);
+						} else if (strcmp(scenario_item_def->name(), "IOCap_Tracker") == 0) {
+    						IOCap_Tracker_Parameter_Set* iocap = new IOCap_Tracker_Parameter_Set;
+    						iocap->XML_deserialize(scenario_item_def);
+    						scenario_definition->iocaps.push_back(iocap);
 						}
-						scenario_definition->push_back(flow);
 					}
 					io_scenarios->push_back(scenario_definition);
 					use_default_workloads = false;
@@ -133,7 +144,7 @@ std::vector<std::vector<IO_Flow_Parameter_Set*>*>* read_workload_definitions(con
 	}
 
 	if (use_default_workloads) {
-		std::vector<IO_Flow_Parameter_Set*>* scenario_definition = new std::vector<IO_Flow_Parameter_Set*>;
+		std::vector<IO_Flow_Parameter_Set*> scenario_flows{};
 		IO_Flow_Parameter_Set_Synthetic* io_flow_1 = new IO_Flow_Parameter_Set_Synthetic;
 		io_flow_1->Device_Level_Data_Caching_Mode = SSD_Components::Caching_Mode::WRITE_CACHE;
 		io_flow_1->Type = Flow_Type::SYNTHETIC;
@@ -167,7 +178,8 @@ std::vector<std::vector<IO_Flow_Parameter_Set*>*>* read_workload_definitions(con
 		io_flow_1->Bandwidth = 262144;
 		io_flow_1->Stop_Time = 1000000000;
 		io_flow_1->Total_Requests_To_Generate = 0;
-		scenario_definition->push_back(io_flow_1);
+		io_flow_1->IOCap_Tracker_Index = 0;
+		scenario_flows.push_back(io_flow_1);
 
 		IO_Flow_Parameter_Set_Synthetic* io_flow_2 = new IO_Flow_Parameter_Set_Synthetic;
 		io_flow_2->Device_Level_Data_Caching_Mode = SSD_Components::Caching_Mode::WRITE_CACHE;
@@ -202,9 +214,18 @@ std::vector<std::vector<IO_Flow_Parameter_Set*>*>* read_workload_definitions(con
 		io_flow_2->Bandwidth = 131072;
 		io_flow_2->Stop_Time = 1000000000;
 		io_flow_2->Total_Requests_To_Generate = 0;
-		scenario_definition->push_back(io_flow_2);
+		io_flow_2->IOCap_Tracker_Index = 0;
+		scenario_flows.push_back(io_flow_2);
 
-		io_scenarios->push_back(scenario_definition);
+		std::vector<IOCap_Tracker_Parameter_Set*> scenario_iocaps{};
+		IOCap_Tracker_Parameter_Set* iocap_tracker = new IOCap_Tracker_Parameter_Set;
+		iocap_tracker->n_ops_per_lease = 1; // Ideal case
+		scenario_iocaps.push_back(iocap_tracker);
+		
+		io_scenarios->push_back(new Workload {
+		    .iocaps = std::move(scenario_iocaps),
+		    .flows = std::move(scenario_flows),
+		});
 
 		PRINT_MESSAGE("Writing default workload parameters to the expected input file.")
 
@@ -278,7 +299,7 @@ int main(int argc, char* argv[])
 
 	Execution_Parameter_Set* exec_params = new Execution_Parameter_Set;
 	read_configuration_parameters(ssd_config_file_path, exec_params);
-	std::vector<std::vector<IO_Flow_Parameter_Set*>*>* io_scenarios = read_workload_definitions(workload_defs_file_path);
+	std::vector<Workload*>* io_scenarios = read_workload_definitions(workload_defs_file_path);
 
 	int cntr = 1;
 	for (auto io_scen = io_scenarios->begin(); io_scen != io_scenarios->end(); io_scen++, cntr++) {
@@ -291,9 +312,14 @@ int main(int argc, char* argv[])
 		//The simulator should always be reset, before starting the actual simulation
 		Simulator->Reset();
 
+		exec_params->Host_Configuration.IOCap_Tracker_Definitions.clear();
+		for (auto iocap_tracker : (*io_scen)->iocaps) {
+			exec_params->Host_Configuration.IOCap_Tracker_Definitions.push_back(iocap_tracker);
+		}
+		
 		exec_params->Host_Configuration.IO_Flow_Definitions.clear();
-		for (auto io_flow_def = (*io_scen)->begin(); io_flow_def != (*io_scen)->end(); io_flow_def++) {
-			exec_params->Host_Configuration.IO_Flow_Definitions.push_back(*io_flow_def);
+		for (auto io_flow_def : (*io_scen)->flows) {
+			exec_params->Host_Configuration.IO_Flow_Definitions.push_back(io_flow_def);
 		}
 
 		SSD_Device ssd(&exec_params->SSD_Device_Configuration, &exec_params->Host_Configuration.IO_Flow_Definitions);//Create SSD_Device based on the specified parameters

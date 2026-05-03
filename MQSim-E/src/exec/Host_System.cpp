@@ -26,6 +26,14 @@ Host_System::Host_System(Host_Parameter_Set* parameters, bool preconditioning_re
 	this->Link->Set_pcie_switch(this->PCIe_switch);
 	Simulator->AddObject(this->Link);
 
+	// Create IOCap Trackers
+	for (auto iocap_id = 0; iocap_id < parameters->IOCap_Tracker_Definitions.size(); iocap_id++) {
+	    this->iocaps.push_back(new Host_Components::IOCapTracker(
+			this->ID() + ".IOCap_Tracker." + std::to_string(iocap_id),
+			parameters->IOCap_Tracker_Definitions[iocap_id]->n_ops_per_lease
+		));
+	}
+
 	//Create IO flows
 	LHA_type address_range_per_flow = ssd_host_interface->Get_max_logical_sector_address() / parameters->IO_Flow_Definitions.size();
 	for (uint16_t flow_id = 0; flow_id < parameters->IO_Flow_Definitions.size(); flow_id++) {
@@ -57,7 +65,7 @@ Host_System::Host_System(Host_Parameter_Set* parameters, bool preconditioning_re
 					flow_param->Synthetic_Generator_Type, (flow_param->Bandwidth == 0? 0 :NanoSecondCoeff / ((flow_param->Bandwidth / SECTOR_SIZE_IN_BYTE) / flow_param->Average_Request_Size)),
 					flow_param->Average_No_of_Reqs_in_Queue, flow_param->Generated_Aligned_Addresses, flow_param->Address_Alignment_Unit,
 					flow_param->Seed, flow_param->Stop_Time, flow_param->Initial_Occupancy_Percentage / double(100.0), flow_param->Total_Requests_To_Generate, ssd_host_interface->GetType(), this->PCIe_root_complex, this->SATA_hba,
-					parameters->Enable_ResponseTime_Logging, parameters->ResponseTime_Logging_Period_Length, parameters->Input_file_path + ".IO_Flow.No_" + std::to_string(flow_id) + ".log");
+					parameters->Enable_ResponseTime_Logging, parameters->ResponseTime_Logging_Period_Length, parameters->Input_file_path + ".IO_Flow.No_" + std::to_string(flow_id) + ".log", this->iocaps[flow_param->IOCap_Tracker_Index]);
 				this->IO_flows.push_back(io_flow);
 				break;
 			}
@@ -69,7 +77,7 @@ Host_System::Host_System(Host_Parameter_Set* parameters, bool preconditioning_re
 					flow_param->Priority_Class, flow_param->Initial_Occupancy_Percentage / double(100.0),
 					flow_param->File_Path, flow_param->Time_Unit, flow_param->Relay_Count, flow_param->Percentage_To_Be_Executed,
 					ssd_host_interface->GetType(), this->PCIe_root_complex, this->SATA_hba,
-					parameters->Enable_ResponseTime_Logging, parameters->ResponseTime_Logging_Period_Length, parameters->Input_file_path + ".IO_Flow.No_" + std::to_string(flow_id) + ".log");
+					parameters->Enable_ResponseTime_Logging, parameters->ResponseTime_Logging_Period_Length, parameters->Input_file_path + ".IO_Flow.No_" + std::to_string(flow_id) + ".log", this->iocaps[flow_param->IOCap_Tracker_Index]);
 
 				this->IO_flows.push_back(io_flow);
 				break;
@@ -86,7 +94,7 @@ Host_System::Host_System(Host_Parameter_Set* parameters, bool preconditioning_re
 	}
 }
 
-Host_System::~Host_System() 
+Host_System::~Host_System()
 {
 	delete this->Link;
 	delete this->PCIe_root_complex;
@@ -141,7 +149,7 @@ void Host_System::Start_simulation()
 	}
 }
 
-void Host_System::Validate_simulation_config() 
+void Host_System::Validate_simulation_config()
 {
 	if (this->IO_flows.size() == 0) {
 		PRINT_ERROR("No IO flow is set for host system")
@@ -157,6 +165,9 @@ void Host_System::Validate_simulation_config()
 	}
 	if (!this->PCIe_switch->Is_ssd_connected()) {
 		PRINT_ERROR("No SSD is connected to the host system")
+	}
+	if (this->iocaps.size() == 0) {
+	    PRINT_ERROR("No IOCaps have been created for the host system")
 	}
 }
 
@@ -174,6 +185,10 @@ void Host_System::Report_results_in_XML(std::string name_prefix, Utils::XmlWrite
 		flow->Report_results_in_XML("Host", xmlwriter);
 	}
 
+	for (auto &iocap_tracker : iocaps) {
+		iocap_tracker->Report_results_in_XML("IOCap", xmlwriter);
+	}
+
 	xmlwriter.Write_close_tag();
 }
 
@@ -189,4 +204,3 @@ std::vector<Utils::Workload_Statistics*> Host_System::get_workloads_statistics()
 
 	return stats;
 }
-

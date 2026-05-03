@@ -12,7 +12,7 @@ namespace Host_Components
 		uint16_t nvme_submission_queue_size, uint16_t nvme_completion_queue_size, 
 		IO_Flow_Priority_Class priority_class, sim_time_type stop_time, double initial_occupancy_ratio, unsigned int total_requets_to_be_generated,
 		HostInterface_Types SSD_device_type, PCIe_Root_Complex* pcie_root_complex, SATA_HBA* sata_hba,
-		bool enabled_logging, sim_time_type logging_period, std::string logging_file_path) : 
+		bool enabled_logging, sim_time_type logging_period, std::string logging_file_path, IOCapTracker* iocaps) : 
 		MQSimEngine::Sim_Object(name), flow_id(flow_id), start_lsa_on_device(start_lsa_on_device), end_lsa_on_device(end_lsa_on_device), io_queue_id(io_queue_id),
 		priority_class(priority_class), stop_time(stop_time), initial_occupancy_ratio(initial_occupancy_ratio), total_requests_to_be_generated(total_requets_to_be_generated), SSD_device_type(SSD_device_type), pcie_root_complex(pcie_root_complex), sata_hba(sata_hba),
 		STAT_generated_request_count(0), STAT_generated_read_request_count(0), STAT_generated_write_request_count(0),
@@ -25,7 +25,8 @@ namespace Host_Components
 		STAT_min_request_delay(MAXIMUM_TIME), STAT_min_request_delay_read(MAXIMUM_TIME), STAT_min_request_delay_write(MAXIMUM_TIME),
 		STAT_max_request_delay(0), STAT_max_request_delay_read(0), STAT_max_request_delay_write(0),
 		STAT_transferred_bytes_total(0), STAT_transferred_bytes_read(0), STAT_transferred_bytes_write(0), progress(0), next_progress_step(0),
-		enabled_logging(enabled_logging), logging_period(logging_period), logging_file_path(logging_file_path)
+		enabled_logging(enabled_logging), logging_period(logging_period), logging_file_path(logging_file_path),
+		iocaps(iocaps)
 	{
 		Host_IO_Request* t= NULL;
 
@@ -253,6 +254,8 @@ namespace Host_Components
 
 	void IO_Flow_Base::NVMe_consume_io_request(Completion_Queue_Entry* cqe)
 	{
+	    iocaps->complete_command(flow_id, cqe->Command_Identifier);
+	
 		//Find the request and update statistics
 		Host_IO_Request* request = nvme_software_request_queue[cqe->Command_Identifier];
 		nvme_software_request_queue.erase(cqe->Command_Identifier);
@@ -337,11 +340,13 @@ namespace Host_Components
 				if (nvme_software_request_queue[*available_command_ids.begin()] != NULL) {
 					PRINT_ERROR("Unexpteced situation in IO_Flow_Base! Overwriting a waiting I/O request in the queue!")
 				} else {
-					new_req->IO_queue_info = *available_command_ids.begin();
-					nvme_software_request_queue[*available_command_ids.begin()] = new_req;
+				    uint16_t command_id = *available_command_ids.begin();
+					new_req->IO_queue_info = command_id;
+					nvme_software_request_queue[command_id] = new_req;
 					available_command_ids.erase(available_command_ids.begin());
 					request_queue_in_memory[nvme_queue_pair.Submission_queue_tail] = new_req;
 					NVME_UPDATE_SQ_TAIL(nvme_queue_pair);
+					iocaps->submit_command(flow_id, command_id);
 				}
 				new_req->Enqueue_time = Simulator->Time();
 				pcie_root_complex->Write_to_device(nvme_queue_pair.Submission_tail_register_address_on_device, nvme_queue_pair.Submission_queue_tail);//Based on NVMe protocol definition, the updated tail pointer should be informed to the device
@@ -427,11 +432,13 @@ namespace Host_Components
 					if (nvme_software_request_queue[*available_command_ids.begin()] != NULL) {
 						PRINT_ERROR("Unexpteced situation in IO_Flow_Base! Overwriting an unhandled I/O request in the queue!")
 					} else {
-						request->IO_queue_info = *available_command_ids.begin();
-						nvme_software_request_queue[*available_command_ids.begin()] = request;
+					    uint16_t command_id = *available_command_ids.begin();
+						request->IO_queue_info = command_id;
+						nvme_software_request_queue[command_id] = request;
 						available_command_ids.erase(available_command_ids.begin());
 						request_queue_in_memory[nvme_queue_pair.Submission_queue_tail] = request;
 						NVME_UPDATE_SQ_TAIL(nvme_queue_pair);
+						iocaps->submit_command(flow_id, command_id);
 					}
 					request->Enqueue_time = Simulator->Time();
 					pcie_root_complex->Write_to_device(nvme_queue_pair.Submission_tail_register_address_on_device, nvme_queue_pair.Submission_queue_tail);//Based on NVMe protocol definition, the updated tail pointer should be informed to the device
