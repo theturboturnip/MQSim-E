@@ -2,7 +2,7 @@
 <MQSim_IO_Scenarios>
 	<IO_Scenario>
 	    <IOCap_Tracker>
-			<N_Ops_Per_Lease>16</N_Ops_Per_Lease>
+			<N_Ops_Per_Lease>4</N_Ops_Per_Lease>
 		</IOCap_Tracker>
 		<IO_Flow_Parameter_Set_Synthetic>
 			<Priority_Class>HIGH</Priority_Class>
@@ -14,7 +14,7 @@
 			<Initial_Occupancy_Percentage>70</Initial_Occupancy_Percentage>
 			<Working_Set_Percentage>100</Working_Set_Percentage>
 			<Synthetic_Generator_Type>QUEUE_DEPTH</Synthetic_Generator_Type>
-			<Read_Percentage>100</Read_Percentage>
+			<Read_Percentage>0</Read_Percentage>
 			<Address_Distribution>RANDOM_UNIFORM</Address_Distribution>
 			<Percentage_of_Hot_Region>0</Percentage_of_Hot_Region>
 			<Generated_Aligned_Addresses>true</Generated_Aligned_Addresses>

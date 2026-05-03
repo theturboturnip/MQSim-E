@@ -16,7 +16,11 @@ bench-all: build
     just bench 2per_readonly
     just bench 2per_writeonly
     just bench 4per
+    just bench 4per_readonly
+    just bench 4per_writeonly
     just bench 8per
+    just bench 8per_readonly
+    just bench 8per_writeonly
     just bench 16per
     just bench 16per_readonly
     just bench 16per_writeonly

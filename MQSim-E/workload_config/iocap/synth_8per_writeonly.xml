@@ -2,7 +2,7 @@
 <MQSim_IO_Scenarios>
 	<IO_Scenario>
 	    <IOCap_Tracker>
-			<N_Ops_Per_Lease>16</N_Ops_Per_Lease>
+			<N_Ops_Per_Lease>8</N_Ops_Per_Lease>
 		</IOCap_Tracker>
 		<IO_Flow_Parameter_Set_Synthetic>
 			<Priority_Class>HIGH</Priority_Class>

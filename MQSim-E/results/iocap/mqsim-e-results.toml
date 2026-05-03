@@ -1,4 +1,4 @@
-timestamp = "2026-05-03T15:26:45.803873"
+timestamp = "2026-05-03T15:31:52.102428"
 generated_by = "MQSim-E-sws35"
 git_hash = "TODO"
 
@@ -54,6 +54,19 @@ max_extra_l_ns = 1740071
 delta_max_l_ns = -741937
 equiv_in_order_n = 19.342209356387574
 
+[tests."run4per_readonly_scenario_1.xml"]
+name = "run4per_readonly_scenario_1.xml"
+n_ops = 4000000
+n_ops_per_lease = 4
+n_used_lease_ids = 9
+iops = 43010.752688
+avg_l_ns = 783545.8741855
+max_l_ns = 1709129
+avg_extra_l_ns = 35098.87799525
+max_extra_l_ns = 987719
+delta_max_l_ns = -964467
+equiv_in_order_n = 4.019258322159966
+
 [tests."run4per_scenario_1.xml"]
 name = "run4per_scenario_1.xml"
 n_ops = 4000000
@@ -66,6 +79,32 @@ avg_extra_l_ns = 274298.84958175
 max_extra_l_ns = 2491075
 delta_max_l_ns = 28894
 equiv_in_order_n = 25.93625905313573
+
+[tests."run4per_writeonly_scenario_1.xml"]
+name = "run4per_writeonly_scenario_1.xml"
+n_ops = 4000000
+n_ops_per_lease = 4
+n_used_lease_ids = 21
+iops = 78431.372549
+avg_l_ns = 649300.41754075
+max_l_ns = 1988112
+avg_extra_l_ns = 233352.25469
+max_extra_l_ns = 1812058
+delta_max_l_ns = -685484
+equiv_in_order_n = 37.60427524548105
+
+[tests."run8per_readonly_scenario_1.xml"]
+name = "run8per_readonly_scenario_1.xml"
+n_ops = 4000000
+n_ops_per_lease = 8
+n_used_lease_ids = 5
+iops = 43010.752688
+avg_l_ns = 830347.6647575
+max_l_ns = 1762940
+avg_extra_l_ns = 81900.66856725
+max_extra_l_ns = 992969
+delta_max_l_ns = -910656
+equiv_in_order_n = 8.04521880145569
 
 [tests."run8per_scenario_1.xml"]
 name = "run8per_scenario_1.xml"
@@ -80,18 +119,31 @@ max_extra_l_ns = 2492407
 delta_max_l_ns = 30200
 equiv_in_order_n = 32.47470699272384
 
+[tests."run8per_writeonly_scenario_1.xml"]
+name = "run8per_writeonly_scenario_1.xml"
+n_ops = 4000000
+n_ops_per_lease = 8
+n_used_lease_ids = 16
+iops = 78431.372549
+avg_l_ns = 754284.28286675
+max_l_ns = 2014942
+avg_extra_l_ns = 338336.120016
+max_extra_l_ns = 1897916
+delta_max_l_ns = -658654
+equiv_in_order_n = 54.072332551516155
+
 [tests."run16per_readonly_scenario_1.xml"]
 name = "run16per_readonly_scenario_1.xml"
 n_ops = 4000000
 n_ops_per_lease = 16
-n_used_lease_ids = 10
-iops = 45454.545455
-avg_l_ns = 1144766.84668925
-max_l_ns = 3084642
-avg_extra_l_ns = 438090.54225025
-max_extra_l_ns = 2610880
-delta_max_l_ns = 411046
-equiv_in_order_n = 40.82641293223918
+n_used_lease_ids = 3
+iops = 43010.752688
+avg_l_ns = 923697.8419855
+max_l_ns = 1849146
+avg_extra_l_ns = 175250.84579525
+max_extra_l_ns = 1143565
+delta_max_l_ns = -824450
+equiv_in_order_n = 16.075341573724646
 
 [tests."run16per_scenario_1.xml"]
 name = "run16per_scenario_1.xml"
@@ -110,14 +162,14 @@ equiv_in_order_n = 40.82641293223918
 name = "run16per_writeonly_scenario_1.xml"
 n_ops = 4000000
 n_ops_per_lease = 16
-n_used_lease_ids = 10
-iops = 45454.545455
-avg_l_ns = 1144766.84668925
-max_l_ns = 3084642
-avg_extra_l_ns = 438090.54225025
-max_extra_l_ns = 2610880
-delta_max_l_ns = 411046
-equiv_in_order_n = 40.82641293223918
+n_used_lease_ids = 9
+iops = 78431.372549
+avg_l_ns = 846749.28714275
+max_l_ns = 2113571
+avg_extra_l_ns = 430801.124292
+max_extra_l_ns = 1988876
+delta_max_l_ns = -560025
+equiv_in_order_n = 68.57664694774782
 
 [tests."run32per_scenario_1.xml"]
 name = "run32per_scenario_1.xml"
