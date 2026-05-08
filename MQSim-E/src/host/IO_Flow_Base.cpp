@@ -9,10 +9,10 @@ namespace Host_Components
 {
 	//unsigned int InputStreamBase::lastId = 0;
 	IO_Flow_Base::IO_Flow_Base(const sim_object_id_type& name, uint16_t flow_id, LHA_type start_lsa_on_device, LHA_type end_lsa_on_device, uint16_t io_queue_id,
-		uint16_t nvme_submission_queue_size, uint16_t nvme_completion_queue_size, 
+		uint16_t nvme_submission_queue_size, uint16_t nvme_completion_queue_size,
 		IO_Flow_Priority_Class priority_class, sim_time_type stop_time, double initial_occupancy_ratio, unsigned int total_requets_to_be_generated,
 		HostInterface_Types SSD_device_type, PCIe_Root_Complex* pcie_root_complex, SATA_HBA* sata_hba,
-		bool enabled_logging, sim_time_type logging_period, std::string logging_file_path, IOCapTracker* iocaps) : 
+		bool enabled_logging, sim_time_type logging_period, std::string logging_file_path, IOCapTrackerContext* iocaps) :
 		MQSimEngine::Sim_Object(name), flow_id(flow_id), start_lsa_on_device(start_lsa_on_device), end_lsa_on_device(end_lsa_on_device), io_queue_id(io_queue_id),
 		priority_class(priority_class), stop_time(stop_time), initial_occupancy_ratio(initial_occupancy_ratio), total_requests_to_be_generated(total_requets_to_be_generated), SSD_device_type(SSD_device_type), pcie_root_complex(pcie_root_complex), sata_hba(sata_hba),
 		STAT_generated_request_count(0), STAT_generated_read_request_count(0), STAT_generated_write_request_count(0),
@@ -114,7 +114,7 @@ namespace Host_Components
 //js
 		trace_start_time = 0;
 	}
-	
+
 	IO_Flow_Base::~IO_Flow_Base()
 	{
 		log_file.close();
@@ -159,7 +159,7 @@ namespace Host_Components
 	{
 		sim_time_type device_response_time = Simulator->Time() - request->Enqueue_time;
 		sim_time_type request_delay = Simulator->Time() - request->Arrival_time;
-		
+
 		STAT_serviced_request_count++;
 		STAT_serviced_request_count_short_term++;
 		STAT_sum_device_response_time += device_response_time;
@@ -255,7 +255,7 @@ namespace Host_Components
 	void IO_Flow_Base::NVMe_consume_io_request(Completion_Queue_Entry* cqe)
 	{
 	    iocaps->complete_command(flow_id, cqe->Command_Identifier);
-	
+
 		//Find the request and update statistics
 		Host_IO_Request* request = nvme_software_request_queue[cqe->Command_Identifier];
 		nvme_software_request_queue.erase(cqe->Command_Identifier);
@@ -282,7 +282,7 @@ namespace Host_Components
 			STAT_min_request_delay = request_delay;
 		}
 		STAT_transferred_bytes_total += request->LBA_count * SECTOR_SIZE_IN_BYTE;
-		
+
 		if (request->Type == Host_IO_Request_Type::READ) {
 			STAT_serviced_read_request_count++;
 			STAT_sum_device_response_time_read += device_response_time;
@@ -329,7 +329,7 @@ namespace Host_Components
 		delete request;
 
 		nvme_queue_pair.Submission_queue_head = cqe->SQ_Head;
-		
+
 		//MQSim always assumes that the request is processed correctly, so no need to check cqe->SF_P
 
 		//If the submission queue is not full anymore, then enqueue waiting requests
@@ -391,12 +391,12 @@ namespace Host_Components
 			next_logging_milestone = Simulator->Time() + logging_period;
 		}
 	}
-	
+
 	Submission_Queue_Entry* IO_Flow_Base::NVMe_read_sqe(uint64_t address)
 	{
 		Submission_Queue_Entry* sqe = new Submission_Queue_Entry;
 		Host_IO_Request* request = request_queue_in_memory[(uint16_t)((address - nvme_queue_pair.Submission_queue_memory_base_address) / sizeof(Submission_Queue_Entry))];
-		
+
 		if (request == NULL) {
 			throw std::invalid_argument(this->ID() + ": Request to access a submission queue entry that does not exist.");
 		}
@@ -602,7 +602,7 @@ namespace Host_Components
 
 		return (uint32_t)(STAT_sum_request_delay_short_term / STAT_serviced_request_count_short_term / SIM_TIME_TO_MICROSECONDS_COEFF);
 	}
-	
+
 	void IO_Flow_Base::Report_results_in_XML(std::string name_prefix, Utils::XmlWriter& xmlwriter)
 	{
 		std::string tmp = name_prefix + ".IO_Flow";

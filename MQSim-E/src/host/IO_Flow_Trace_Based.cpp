@@ -13,7 +13,7 @@ namespace Host_Components
 		uint16_t nvme_submission_queue_size, uint16_t nvme_completion_queue_size, IO_Flow_Priority_Class priority_class, double initial_occupancy_ratio,
 		std::string trace_file_path, Trace_Time_Unit time_unit, unsigned int total_replay_count, unsigned int percentage_to_be_simulated,
 		HostInterface_Types SSD_device_type, PCIe_Root_Complex* pcie_root_complex, SATA_HBA* sata_hba,
-		bool enabled_logging, sim_time_type logging_period, std::string logging_file_path, IOCapTracker* iocaps) :
+		bool enabled_logging, sim_time_type logging_period, std::string logging_file_path, IOCapTrackerContext* iocaps) :
 		IO_Flow_Base(name, flow_id, start_lsa_on_device, end_lsa_on_device, io_queue_id, nvme_submission_queue_size, nvme_completion_queue_size, priority_class, 0, initial_occupancy_ratio, 0, SSD_device_type, pcie_root_complex, sata_hba, enabled_logging, logging_period, logging_file_path, iocaps),
 		trace_file_path(trace_file_path), time_unit(time_unit), total_replay_no(total_replay_count), percentage_to_be_simulated(percentage_to_be_simulated),
 		total_requests_in_file(0), time_offset(0)
@@ -71,7 +71,7 @@ namespace Host_Components
 		request->Arrival_time = time_offset + Simulator->Time();
 		STAT_generated_request_count++;
 
-#if IGNORE_TIME_STAMP	
+#if IGNORE_TIME_STAMP
 		if (STAT_generated_request_count < total_requests_to_be_generated) {
 			std::string trace_line;
 			if (std::getline(trace_file, trace_line)) {
@@ -102,10 +102,10 @@ namespace Host_Components
 		IO_Flow_Base::NVMe_update_and_submit_completion_queue_tail();
 
 #if IGNORE_TIME_STAMP
-		//Simulator->Register_sim_event(Simulator->Time() + 50000, this); 
+		//Simulator->Register_sim_event(Simulator->Time() + 50000, this);
 
 		Host_IO_Request* request = Generate_next_request();
-		
+
 		/* In the demand based execution mode, the Generate_next_request() function may return NULL
 		* if 1) the simulation stop is met, or 2) the number of generated I/O requests reaches its threshold.*/
 		if (request != NULL) {
@@ -117,16 +117,16 @@ namespace Host_Components
 	void IO_Flow_Trace_Based::SATA_consume_io_request(Host_IO_Request* io_request)
 	{
 		IO_Flow_Base::SATA_consume_io_request(io_request);
-		
-#if IGNORE_TIME_STAMP				
+
+#if IGNORE_TIME_STAMP
 		Host_IO_Request* request = Generate_next_request();
-		
+
 		/* In the demand based execution mode, the Generate_next_request() function may return NULL
 		* if 1) the simulation stop is met, or 2) the number of generated I/O requests reaches its threshold.*/
 		if (request != NULL) {
 			Submit_io_request(request);
 		}
-#endif		
+#endif
 	}
 
 	void IO_Flow_Trace_Based::Start_simulation()
@@ -146,7 +146,7 @@ namespace Host_Components
 		std::getline(trace_file, trace_line);
 		std::getline(trace_file, trace_line);
 		std::getline(trace_file, trace_line);
-#endif	
+#endif
 
 		sim_time_type last_request_arrival_time = 0;
 		while (std::getline(trace_file, trace_line)) {
@@ -156,8 +156,8 @@ namespace Host_Components
 			if (current_trace_line.size() != ASCIIItemsPerLine) {
 #if defined(OLD_TRACE)
 				continue;
-#endif					
-				PRINT_ERROR("Need to use propoer definition for trace");				
+#endif
+				PRINT_ERROR("Need to use propoer definition for trace");
 				break;
 			}
 
@@ -203,7 +203,7 @@ namespace Host_Components
 		Utils::Helper_Functions::Remove_cr(trace_line);
 		Utils::Helper_Functions::Tokenize(trace_line, ASCIILineDelimiter, current_trace_line);
 
-#if IGNORE_TIME_STAMP				
+#if IGNORE_TIME_STAMP
 		Simulator->Register_sim_event((sim_time_type)1, this);
 #elif defined(ALIBABA)
 		trace_start_time = (std::strtoll(current_trace_line[ASCIITraceTimeColumn].c_str(), &pEnd, 10)) * 1000 / Trace_ACC;
@@ -226,7 +226,7 @@ namespace Host_Components
 	void IO_Flow_Trace_Based::Execute_simulator_event(MQSimEngine::Sim_Event*)
 	{
 
-#if IGNORE_TIME_STAMP			
+#if IGNORE_TIME_STAMP
 		for (unsigned int i = 0; i < ENQUEUED_REQUEST_NUMBER; i++) {
 			Submit_io_request(Generate_next_request());
 		}
@@ -237,7 +237,7 @@ namespace Host_Components
 		}
 
 		if (STAT_generated_request_count < total_requests_to_be_generated) {
-			
+
 			std::string trace_line;
 			if (std::getline(trace_file, trace_line)) {
 				Utils::Helper_Functions::Remove_cr(trace_line);
@@ -255,7 +255,7 @@ namespace Host_Components
 				Utils::Helper_Functions::Tokenize(trace_line, ASCIILineDelimiter, current_trace_line);
 				PRINT_MESSAGE("* Replay round "<< replay_counter << "of "<< total_replay_no << " started  for" << ID())
 			}
-			
+
 #if defined(ALIBABA)
 			char* pEnd;
 			sim_time_type temp = std::strtoll(current_trace_line[ASCIITraceTimeColumn].c_str(), &pEnd, 10);
@@ -322,17 +322,17 @@ namespace Host_Components
 #if defined(OLD_TRACE)
 			if ((line_splitted[ASCIITraceTypeColumn].compare(ASCIITraceWriteCode) != 0) && (line_splitted[ASCIITraceTypeColumn].compare(ASCIITraceReadCode) != 0)){
 				continue;
-			}		
-#endif	
-			if (line_splitted.size() != ASCIIItemsPerLine) {				
+			}
+#endif
+			if (line_splitted.size() != ASCIIItemsPerLine) {
 				PRINT_ERROR("Need to use propoer definition for trace  " << trace_line.c_str());
 				break;
 			}
-	
+
 			sim_time_type prev_time = last_request_arrival_time;
 			last_request_arrival_time = std::strtoull(line_splitted[ASCIITraceTimeColumn].c_str(), &pEnd, 10);
 #ifdef ALIBABA
-			last_request_arrival_time = last_request_arrival_time * 1000 / Trace_ACC; 
+			last_request_arrival_time = last_request_arrival_time * 1000 / Trace_ACC;
 #endif
 #ifdef MSR_TRACE
 			last_request_arrival_time = last_request_arrival_time * 100 / Trace_ACC; // js : convert window file time (100ns) to 1ns
@@ -409,9 +409,9 @@ namespace Host_Components
 				}
 			}
 #else
-			//Address access pattern statistics 
+			//Address access pattern statistics
 			bool is_write = (line_splitted[ASCIITraceTypeColumn].compare(ASCIITraceWriteCode) == 0) ? true : false; //
-			
+
 			while (start_LBA <= end_LBA) {
 				LPA_type device_address = Convert_host_logical_address_to_device_address(start_LBA);
 				page_status_type access_status_bitmap = 0xFFFF; //Find_NVM_subunit_access_bitmap(start_LBA);
@@ -421,7 +421,7 @@ namespace Host_Components
 						hist.Access_count = 16;
 						hist.Accessed_sub_units = access_status_bitmap;
 						stats.Write_address_access_pattern[device_address] = hist;
-					} 
+					}
 
 					if (stats.Read_address_access_pattern.find(device_address) != stats.Read_address_access_pattern.end()) {
 						stats.Write_read_shared_addresses.insert(device_address);
@@ -432,7 +432,7 @@ namespace Host_Components
 						hist.Access_count = 16;
 						hist.Accessed_sub_units = access_status_bitmap;
 						stats.Read_address_access_pattern[device_address] = hist;
-					} 
+					}
 
 					if (stats.Write_address_access_pattern.find(device_address) != stats.Write_address_access_pattern.end()) {
 						stats.Write_read_shared_addresses.insert(device_address);
@@ -487,6 +487,6 @@ namespace Host_Components
 		stats.Initial_occupancy_ratio = initial_occupancy_ratio;
 		stats.Replay_no = total_replay_no;
 
-		//stats.Address_distribution_type = Utils::Address_Distribution_Type::RANDOM_UNIFORM; //RANDOM_HOTCOLD 
+		//stats.Address_distribution_type = Utils::Address_Distribution_Type::RANDOM_UNIFORM; //RANDOM_HOTCOLD
 	}
 }

@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Execution_Parameter_Set>
+    <Host_Parameter_Set>
+        <!-- from datasheet, PCIe gen 4 (2GB/s one-way) x4 -->
+        <PCIe_Lane_Bandwidth>2.00000</PCIe_Lane_Bandwidth>
+        <PCIe_Lane_Count>4</PCIe_Lane_Count>
+        <SATA_Processing_Delay>400000</SATA_Processing_Delay> <!-- we don't use SATA -->
+        <Enable_ResponseTime_Logging>false</Enable_ResponseTime_Logging>
+        <ResponseTime_Logging_Period_Length>1000000</ResponseTime_Logging_Period_Length>
+    </Host_Parameter_Set>
+    <Device_Parameter_Set>
+        <Seed>321</Seed>
+        <Enabled_Preconditioning>false</Enabled_Preconditioning>
+        <Memory_Type>FLASH</Memory_Type>
+        <HostInterface_Type>NVME</HostInterface_Type>
+        <IO_Queue_Depth>65535</IO_Queue_Depth>
+        <!-- from table 1 - 512 device queue size -->
+        <Queue_Fetch_Size>512</Queue_Fetch_Size>
+        <Caching_Mechanism>ADVANCED</Caching_Mechanism>
+        <Data_Cache_Sharing_Mode>SHARED</Data_Cache_Sharing_Mode>
+        <!-- from table 1, 16MB write buffer -->
+        <Data_Cache_Capacity>16777216</Data_Cache_Capacity> <!-- 16: 16777216, 32MB: 33554432, 64MB: 67108864, 128MB: 134217728 -->
+        <Data_Cache_DRAM_Row_Size>8192</Data_Cache_DRAM_Row_Size>
+        <Data_Cache_DRAM_Data_Rate>1600</Data_Cache_DRAM_Data_Rate>
+        <Data_Cache_DRAM_Data_Busrt_Size>1</Data_Cache_DRAM_Data_Busrt_Size>
+        <Data_Cache_DRAM_tRCD>13</Data_Cache_DRAM_tRCD>
+        <Data_Cache_DRAM_tCL>13</Data_Cache_DRAM_tCL>
+        <Data_Cache_DRAM_tRP>13</Data_Cache_DRAM_tRP>
+        <Address_Mapping>PAGE_LEVEL</Address_Mapping>
+        <Ideal_Mapping_Table>true</Ideal_Mapping_Table>
+        <!-- from table 1, 2GB mapping table -->
+        <CMT_Capacity>2147483648</CMT_Capacity> <!-- 2GiB: 2147483648 256MB: 268435456  -->
+        <CMT_Sharing_Mode>SHARED</CMT_Sharing_Mode>
+        <Plane_Allocation_Scheme>PCWD</Plane_Allocation_Scheme>
+        <Transaction_Scheduling_Policy>OUT_OF_ORDER</Transaction_Scheduling_Policy>
+        <Overprovisioning_Ratio>0.127</Overprovisioning_Ratio>
+        <GC_Exec_Threshold>0.05</GC_Exec_Threshold>
+        <GC_Block_Selection_Policy>GREEDY</GC_Block_Selection_Policy>
+        <Use_Copyback_for_GC>false</Use_Copyback_for_GC>
+        <Preemptible_GC_Enabled>true</Preemptible_GC_Enabled>
+        <GC_Hard_Threshold>0.01</GC_Hard_Threshold>
+        <Dynamic_Wearleveling_Enabled>false</Dynamic_Wearleveling_Enabled>
+        <Static_Wearleveling_Enabled>false</Static_Wearleveling_Enabled>
+        <Static_Wearleveling_Threshold>200</Static_Wearleveling_Threshold>
+        <Preferred_suspend_erase_time_for_read>100000</Preferred_suspend_erase_time_for_read>
+        <Preferred_suspend_erase_time_for_write>10000</Preferred_suspend_erase_time_for_write>
+        <Preferred_suspend_write_time_for_read>20000</Preferred_suspend_write_time_for_read>
+        <!-- from table 1 -->
+        <Flash_Channel_Count>8</Flash_Channel_Count> <!--64g-->
+        <Flash_Channel_Width>1</Flash_Channel_Width>
+        <Channel_Transfer_Rate>1200</Channel_Transfer_Rate>
+        <!-- from table 1 -->
+        <Chip_No_Per_Channel>4</Chip_No_Per_Channel>
+        <Flash_Comm_Protocol>NVDDR2</Flash_Comm_Protocol>
+        <Flash_Parameter_Set>
+            <Flash_Technology>TLC</Flash_Technology>
+            <!-- from whitepaper -->
+            <CMD_Suspension_Support>PROGRAM_ERASE</CMD_Suspension_Support>
+            <!-- from table 1 -->
+            <Page_Read_Latency_LSB>45000</Page_Read_Latency_LSB> <!-- 45us: 45000ns -->
+            <!-- from table 1 -->
+            <Page_Read_Latency_CSB>45000</Page_Read_Latency_CSB>
+            <!-- from table 1 -->
+            <Page_Read_Latency_MSB>45000</Page_Read_Latency_MSB>
+            <!-- from table 1 -->
+            <Page_Program_Latency_LSB>650000</Page_Program_Latency_LSB> <!-- 650us: 650000ns -->
+            <!-- from table 1 -->
+            <Page_Program_Latency_CSB>650000</Page_Program_Latency_CSB>
+            <!-- from table 1 -->
+            <Page_Program_Latency_MSB>650000</Page_Program_Latency_MSB>
+            <!-- from table 1 -->
+            <Block_Erase_Latency>35000000</Block_Erase_Latency> <!-- 35000us: 35000000ns -->
+            <Block_PE_Cycles_Limit>100000</Block_PE_Cycles_Limit> <!-- don't have data for this -->
+            <Suspend_Erase_Time>10000</Suspend_Erase_Time> <!-- don't have data for this -->
+            <Suspend_Program_Time>100000</Suspend_Program_Time> <!-- don't have data for this -->
+            <!-- from table 1 -->
+            <Die_No_Per_Chip>1</Die_No_Per_Chip>
+            <!-- from table 1 -->
+            <Plane_No_Per_Die>4</Plane_No_Per_Die> <!--8g-->
+            <!-- paper indicated 2728 blocks per die and 4 planes per die -->
+            <Block_No_Per_Plane>682</Block_No_Per_Plane>  <!--1024, 2048 --> <!--2g-->
+            <!-- inferred from total capacity 64GB, page size 16KB (=> 2^22 total pages) per die, blocks per die ~= 2^11.5 -->
+            <!-- this would also match the anandtech report that Samsung use 16MB erase blocks (which I assume are the same) as of 2018-->
+            <Page_No_Per_Block>1024</Page_No_Per_Block> <!--128 256 --> <!--2m-->
+            <!-- from table 1 -->
+            <Page_Capacity>16384</Page_Capacity> <!--8192 16384 --> <!--16k-->
+            <Page_Metadat_Capacity>448</Page_Metadat_Capacity> <!-- no info on this -->
+        </Flash_Parameter_Set>
+    </Device_Parameter_Set>
+</Execution_Parameter_Set>

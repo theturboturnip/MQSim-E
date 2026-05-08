@@ -28,9 +28,8 @@ Host_System::Host_System(Host_Parameter_Set* parameters, bool preconditioning_re
 
 	// Create IOCap Trackers
 	for (auto iocap_id = 0; iocap_id < parameters->IOCap_Tracker_Definitions.size(); iocap_id++) {
-	    this->iocaps.push_back(new Host_Components::IOCapTracker(
-			this->ID() + ".IOCap_Tracker." + std::to_string(iocap_id),
-			parameters->IOCap_Tracker_Definitions[iocap_id]->n_ops_per_lease
+	    this->iocaps.push_back(new Host_Components::IOCapTrackerContext(
+			this->ID() + ".IOCap_Tracker." + std::to_string(iocap_id)
 		));
 	}
 

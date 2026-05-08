@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="us-ascii" ?>
+<MQSim_IO_Scenarios>
+	<IO_Scenario>
+	    <IOCap_Tracker />
+		
+        <IO_Flow_Parameter_Set_Synthetic>
+			<Priority_Class>HIGH</Priority_Class>
+			<Device_Level_Data_Caching_Mode>WRITE_CACHE</Device_Level_Data_Caching_Mode>
+			<!-- PM9A3 has 8 channels -->
+			<Channel_IDs>0,1,2,3,4,5,6,7</Channel_IDs>
+			<!-- PM9A3 has 8 chips/channel -->
+			<Chip_IDs>0,1,2,3</Chip_IDs>
+			<!-- PM9A3 has 1 die/chip -->
+			<Die_IDs>0</Die_IDs>
+			<!-- PM9A3 has 4 planes/die -->
+			<Plane_IDs>0,1,2,3</Plane_IDs>
+
+			<IOCap_Tracker_Index>0</IOCap_Tracker_Index>
+			<Synthetic_Generator_Type>QUEUE_DEPTH</Synthetic_Generator_Type>
+			<Average_No_of_Reqs_in_Queue>512</Average_No_of_Reqs_in_Queue>
+
+			<Initial_Occupancy_Percentage>100</Initial_Occupancy_Percentage>
+			<Working_Set_Percentage>100</Working_Set_Percentage>
+			<Read_Percentage>100</Read_Percentage>
+
+			<!-- the distribution pattern of addresses in the generated flow of I/O requests. Range = {STREAMING, RANDOM_UNIFORM, RANDOM_HOTCOLD, MIXED_STREAMING_RANDOM}. -->
+			<Address_Distribution>RANDOM_UNIFORM</Address_Distribution>
+			<Generated_Aligned_Addresses>true</Generated_Aligned_Addresses>
+			<!-- the unit that all generated addresses must be aligned to in sectors (i.e. 512 bytes). Range = {all positive integer values}. -->
+			<Address_Alignment_Unit>8</Address_Alignment_Unit> <!-- random 4KiB = 8 * 512B -->
+
+			<!-- if RANDOM_HOTCOLD is set for address distribution, then this parameter determines the ratio of the hot region with respect to the entire logical address space. Range = {all integer values in the range 1 to 100}. -->
+			<!-- <Percentage_of_Hot_Region>0</Percentage_of_Hot_Region> -->
+
+            <!-- the distribution pattern of request sizes in the generated flow of I/O requests. Range = {FIXED, NORMAL}. -->
+			<Request_Size_Distribution>FIXED</Request_Size_Distribution>
+			<!-- average size of generated I/O requests in sectors (i.e. 512 bytes). Range = {all positive integer values}. -->
+			<Average_Request_Size>8</Average_Request_Size> <!-- random 4KiB = 8 * 512B -->
+			<!-- if the request size distribution is set to NORMAL, then this parameter determines the variance of I/O request sizes in sectors. Range = {all non-negative integer values}. -->
+			<Variance_Request_Size>0</Variance_Request_Size>
+
+			<Seed>798</Seed>
+			<Stop_Time>0</Stop_Time>
+			<Total_Requests_To_Generate>4000000</Total_Requests_To_Generate>
+		</IO_Flow_Parameter_Set_Synthetic>
+		
+	</IO_Scenario>
+</MQSim_IO_Scenarios>

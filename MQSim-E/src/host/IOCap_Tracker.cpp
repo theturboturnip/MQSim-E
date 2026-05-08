@@ -13,10 +13,10 @@ namespace Host_Components
         return (((uint32_t)flow_id) << 16) | ((uint32_t)command_id);
     }
 
-    IOCapTracker::IOCapTracker(const sim_object_id_type& name, int n_ops_per_lease) : MQSimEngine::Sim_Object(name), n_ops_per_lease(n_ops_per_lease), lease_statuses(), outstanding_commands(), STAT_sum_time_exposed(0), STAT_max_time_exposed(0), STAT_sum_extra_time_exposed(0), STAT_max_extra_time_exposed(0),  STAT_total_lease_ids_required_for_total_availability(0), next_lease(nullptr), STAT_total_lease_openings(0), STAT_sum_lease_occupancy_at_close(0) {
+    SingleIOCapTrackerContext::SingleIOCapTrackerContext(const sim_object_id_type& name, int n_ops_per_lease) : MQSimEngine::Sim_Object(name), n_ops_per_lease(n_ops_per_lease), lease_statuses(), outstanding_commands(), STAT_sum_time_exposed(0), STAT_max_time_exposed(0), STAT_sum_extra_time_exposed(0), STAT_max_extra_time_exposed(0),  STAT_total_lease_ids_required_for_total_availability(0), next_lease(nullptr), STAT_total_lease_openings(0), STAT_sum_lease_occupancy_at_close(0) {
     }
 
-    void IOCapTracker::submit_command(FlowID flow_id, CommandID command_id) {
+    void SingleIOCapTrackerContext::submit_command(FlowID flow_id, CommandID command_id) {
         auto time = Simulator->Time();
         auto combined_id = join_ids(flow_id, command_id);
         if (outstanding_commands.find(combined_id) != outstanding_commands.end()) {
@@ -60,21 +60,21 @@ namespace Host_Components
             outstanding_commands[combined_id] = lease_to_use->id;
         }
     }
-	void IOCapTracker::complete_command(FlowID flow_id, CommandID command_id) {
+	void SingleIOCapTrackerContext::complete_command(FlowID flow_id, CommandID command_id) {
         auto time = Simulator->Time();
         auto combined_id = join_ids(flow_id, command_id);
 
-        auto outstanding_command = outstanding_commands.find(command_id);
+        auto outstanding_command = outstanding_commands.find(combined_id);
         if (outstanding_command == outstanding_commands.end()) {
-            PRINT_ERROR("completed unsubmitted flow_id/command_id " << flow_id << " " << command_id);
+            PRINT_ERROR("l_n " << n_ops_per_lease << " completed unsubmitted flow_id/command_id " << flow_id << " " << command_id);
         }
-        auto lease_id = outstanding_commands[combined_id];
+        auto lease_id = outstanding_command->second;
         auto& lease = lease_statuses[lease_id];
         outstanding_commands.erase(outstanding_command);
 
         lease.n_outstanding_commands--;
         if (lease.n_outstanding_commands < 0) {
-            PRINT_ERROR("completed flow/command " << flow_id << " " << command_id << ", mapped to lease " << lease_id << " but now has " << lease.n_outstanding_commands << " outstanding...");
+            PRINT_ERROR("l_n " << n_ops_per_lease << " completed flow/command " << flow_id << " " << command_id << ", mapped to lease " << lease_id << " but now has " << lease.n_outstanding_commands << " outstanding...");
         }
 
         lease.all_command_close_times.push_back(time);
@@ -103,10 +103,10 @@ namespace Host_Components
         }
 	}
 
-	void IOCapTracker::Report_results_in_XML(std::string name_prefix, Utils::XmlWriter& xmlwriter) {
-	    if (!outstanding_commands.empty()) {
-			PRINT_ERROR("Reporting results while commands outstanding");
-		}
+	void SingleIOCapTrackerContext::Report_results_in_XML(std::string name_prefix, Utils::XmlWriter& xmlwriter) {
+	 //    if (!outstanding_commands.empty()) {
+		// 	PRINT_ERROR("l_n " << n_ops_per_lease << " reporting results while " << outstanding_commands.size() << " commands outstanding");
+		// }
 		std::string tmp = name_prefix + ".IOCapTracker";
 		xmlwriter.Write_open_tag(tmp);
 
@@ -149,11 +149,11 @@ namespace Host_Components
 		xmlwriter.Write_close_tag();
 	}
 
-	void IOCapTracker::Start_simulation()
+	void SingleIOCapTrackerContext::Start_simulation()
     {
     }
 
-    void IOCapTracker::Validate_simulation_config()
+    void SingleIOCapTrackerContext::Validate_simulation_config()
     {
         if (n_ops_per_lease <= 0)
         {
@@ -161,7 +161,52 @@ namespace Host_Components
         }
     }
 
-    void IOCapTracker::Execute_simulator_event(MQSimEngine::Sim_Event* event)
+    void SingleIOCapTrackerContext::Execute_simulator_event(MQSimEngine::Sim_Event* event)
+    {
+    }
+
+    IOCapTrackerContext::IOCapTrackerContext(const sim_object_id_type& name) : MQSimEngine::Sim_Object(name) {
+        contexts = {};
+        for (int32_t i = 0; i <= 7; i++) {
+            int32_t depth = 1 << i;
+            contexts.emplace_back(
+     			this->ID() + ".Context." + std::to_string(depth),
+                depth
+            );
+        }
+    }
+
+    void IOCapTrackerContext::submit_command(FlowID flow_id, CommandID command_id) {
+        // std::cerr << "S" << flow_id << "/" << command_id << "\n";
+        for (auto& context : contexts) {
+            context.submit_command(flow_id, command_id);
+        }
+    }
+	void IOCapTrackerContext::complete_command(FlowID flow_id, CommandID command_id) {
+	    // std::cerr << "C" << flow_id << "/" << command_id << "\n";
+	    for (auto& context : contexts) {
+            context.complete_command(flow_id, command_id);
+        }
+	}
+
+	void IOCapTrackerContext::Report_results_in_XML(std::string name_prefix, Utils::XmlWriter& xmlwriter) {
+	    std::string name = name_prefix + ".IOCapTrackerContext";
+	    xmlwriter.Write_open_tag(name);
+        for (auto& context : contexts) {
+    		context.Report_results_in_XML(name, xmlwriter);
+    	}
+        xmlwriter.Write_close_tag();
+	}
+
+	void IOCapTrackerContext::Start_simulation()
+    {
+    }
+
+    void IOCapTrackerContext::Validate_simulation_config()
+    {
+    }
+
+    void IOCapTrackerContext::Execute_simulator_event(MQSimEngine::Sim_Event* event)
     {
     }
 }

@@ -35,10 +35,10 @@ namespace Host_Components
         }
     };
 
-	class IOCapTracker : public MQSimEngine::Sim_Object, public MQSimEngine::Sim_Reporter
+	class SingleIOCapTrackerContext : public MQSimEngine::Sim_Object, public MQSimEngine::Sim_Reporter
 	{
 	public:
-	    IOCapTracker(const sim_object_id_type& name, int n_ops_per_lease);
+	    SingleIOCapTrackerContext(const sim_object_id_type& name, int n_ops_per_lease);
 
 	    void submit_command(FlowID flow_id, CommandID command_id);
 		void complete_command(FlowID flow_id, CommandID command_id);
@@ -60,6 +60,22 @@ namespace Host_Components
 		LeaseID STAT_total_lease_ids_required_for_total_availability;
 		LeaseID STAT_total_lease_openings;
 		LeaseID STAT_sum_lease_occupancy_at_close;
+	};
+
+	class IOCapTrackerContext : public MQSimEngine::Sim_Object, public MQSimEngine::Sim_Reporter
+	{
+	public:
+	    IOCapTrackerContext(const sim_object_id_type& name);
+
+	    void submit_command(FlowID flow_id, CommandID command_id);
+		void complete_command(FlowID flow_id, CommandID command_id);
+
+		virtual void Start_simulation();
+		virtual void Validate_simulation_config();
+		virtual void Execute_simulator_event(MQSimEngine::Sim_Event* event);
+		virtual void Report_results_in_XML(std::string name_prefix, Utils::XmlWriter& xmlwriter);
+	protected:
+        std::vector<SingleIOCapTrackerContext> contexts;
 	};
 }
 

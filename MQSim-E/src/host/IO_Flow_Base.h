@@ -47,7 +47,7 @@ namespace Host_Components
 			uint16_t nvme_submission_queue_size, uint16_t nvme_completion_queue_size, IO_Flow_Priority_Class priority_class,
 			sim_time_type stop_time, double initial_occupancy_ratio, unsigned int total_requets_to_be_generated,
 			HostInterface_Types SSD_device_type, PCIe_Root_Complex* pcie_root_complex, SATA_HBA* sata_hba,
-			bool enabled_logging, sim_time_type logging_period, std::string logging_file_path, IOCapTracker* iocaps);
+			bool enabled_logging, sim_time_type logging_period, std::string logging_file_path, IOCapTrackerContext* iocaps);
 		~IO_Flow_Base();
 		void Start_simulation();
 		IO_Flow_Priority_Class Priority_class() { return priority_class; }
@@ -69,7 +69,7 @@ namespace Host_Components
 		void Report_results_in_XML(std::string name_prefix, Utils::XmlWriter& xmlwriter);
 		virtual void Get_statistics(Utils::Workload_Statistics& stats, LPA_type(*Convert_host_logical_address_to_device_address)(LHA_type lha),
 			page_status_type(*Find_NVM_subunit_access_bitmap)(LHA_type lha)) = 0;
-	
+
 		// js
 		uint32_t Get_read_device_response_time();//in microseconds
 		uint32_t Get_max_read_response_time();//in microseconds
@@ -83,8 +83,8 @@ namespace Host_Components
 		sim_time_type trace_start_time; // js: for getting offset time form trace
 
 	protected:
-        IOCapTracker* iocaps;
-	
+        IOCapTrackerContext* iocaps;
+
 		uint16_t flow_id;
 		double initial_occupancy_ratio;//The initial amount of valid logical pages when pereconditioning is performed
 		sim_time_type stop_time;//The flow stops generating request when simulation time reaches stop_time
@@ -133,7 +133,7 @@ namespace Host_Components
 		sim_time_type next_logging_milestone;
 		std::string logging_file_path;
 		std::ofstream log_file;
-		std::ofstream read_log_file; 
+		std::ofstream read_log_file;
 		std::ofstream write_log_file;
 		uint32_t Get_device_response_time_short_term();//in microseconds
 		uint32_t Get_end_to_end_request_delay_short_term();//in microseconds

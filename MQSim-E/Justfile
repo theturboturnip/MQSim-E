@@ -1,4 +1,4 @@
-ssd := "ssd_config/ssd_C8_P4_64G.xml"
+ssd := ""
 
 default:
     @just --list
@@ -6,27 +6,28 @@ default:
 build:
     make
 
-bench n:
-    ./MQSim -i {{ssd}} -w workload_config/iocap/synth_{{n}}.xml -o results/iocap-raw/run{{n}} 1>results/iocap-raw/run{{n}}_stdout.txt
+bench ssd n:
+    ./MQSim -i "ssd_config/ssd_{{ssd}}.xml" -w workload_config/iocap/synth_{{n}}.xml -o results/iocap-raw/{{ssd}}/run{{n}} 1>results/iocap-raw/{{ssd}}/run{{n}}_stdout.txt
 
-bench-all: build
-    mkdir -p results/iocap-raw
-    just bench 1per
-    just bench 2per
-    just bench 2per_readonly
-    just bench 2per_writeonly
-    just bench 4per
-    just bench 4per_readonly
-    just bench 4per_writeonly
-    just bench 8per
-    just bench 8per_readonly
-    just bench 8per_writeonly
-    just bench 16per
-    just bench 16per_readonly
-    just bench 16per_writeonly
-    just bench 32per
-    just bench 64per
+gen-bench *args:
+    mkdir -p workload_config/iocap
+    uv run generate_iocap_workloads.py workload_config/iocap {{args}}
 
-report:
+bench-all queues ssd="PM9A3": build
+    mkdir -p results/iocap-raw/{{ssd}}
+    just bench {{ssd}} len_queue_ids_{{queues}}_read_percentage_0_initial_occupancy_0
+    just bench {{ssd}} len_queue_ids_{{queues}}_read_percentage_0_initial_occupancy_50
+    just bench {{ssd}} len_queue_ids_{{queues}}_read_percentage_0_initial_occupancy_70
+    just bench {{ssd}} len_queue_ids_{{queues}}_read_percentage_0_initial_occupancy_100
+    just bench {{ssd}} len_queue_ids_{{queues}}_read_percentage_50_initial_occupancy_0
+    just bench {{ssd}} len_queue_ids_{{queues}}_read_percentage_50_initial_occupancy_50
+    just bench {{ssd}} len_queue_ids_{{queues}}_read_percentage_50_initial_occupancy_70
+    just bench {{ssd}} len_queue_ids_{{queues}}_read_percentage_50_initial_occupancy_100
+    just bench {{ssd}} len_queue_ids_{{queues}}_read_percentage_100_initial_occupancy_0
+    just bench {{ssd}} len_queue_ids_{{queues}}_read_percentage_100_initial_occupancy_50
+    just bench {{ssd}} len_queue_ids_{{queues}}_read_percentage_100_initial_occupancy_70
+    just bench {{ssd}} len_queue_ids_{{queues}}_read_percentage_100_initial_occupancy_100
+
+report ssd="PM9A3":
     mkdir -p results/iocap
-    uv run tomlize_results.py --toml ./results/iocap/mqsim-e-results.toml ./results/iocap-raw/run*.xml
+    uv run tomlize_results.py --toml "./results/iocap/mqsim-e-results-{{ssd}}.toml" "./results/iocap-raw/{{ssd}}/run*.xml"

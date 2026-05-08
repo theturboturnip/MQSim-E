@@ -1,4 +1,5 @@
 #include "IO_Flow_Parameter_Set.h"
+#include <stdexcept>
 #include <string>
 #include <set>
 #include <cstring>
@@ -220,8 +221,8 @@ void IO_Flow_Parameter_Set::XML_deserialize(rapidxml::xml_node<> *node)
 				IOCap_Tracker_Index = std::stoul(val);
 			}
 		}
-	} catch (...) {
-		PRINT_ERROR("Error in IO_Flow_Parameter_Set!")
+	} catch (std::runtime_error ex) {
+		PRINT_ERROR("Error in IO_Flow_Parameter_Set! " << ex.what())
 	}
 }
 
@@ -265,7 +266,7 @@ void IO_Flow_Parameter_Set_Synthetic::XML_serialize(Utils::XmlWriter& xmlwriter)
 			break;
 	}
 	xmlwriter.Write_attribute_string(attr, val);
-	 
+
 
 	attr = "Percentage_of_Hot_Region";
 	val = std::to_string(Percentage_of_Hot_Region);
@@ -278,7 +279,7 @@ void IO_Flow_Parameter_Set_Synthetic::XML_serialize(Utils::XmlWriter& xmlwriter)
 	attr = "Address_Alignment_Unit";
 	val = std::to_string(Address_Alignment_Unit);
 	xmlwriter.Write_attribute_string(attr, val);
-	
+
 	attr = "Request_Size_Distribution";
 	switch (Request_Size_Distribution) {
 		case Utils::Request_Size_Distribution_Type::FIXED:
