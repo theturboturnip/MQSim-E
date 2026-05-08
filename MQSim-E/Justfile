@@ -30,4 +30,4 @@ bench-all queues ssd="PM9A3": build
 
 report ssd="PM9A3":
     mkdir -p results/iocap
-    uv run tomlize_results.py --toml "./results/iocap/mqsim-e-results-{{ssd}}.toml" "./results/iocap-raw/{{ssd}}/run*.xml"
+    uv run tomlize_results.py --toml "./results/iocap/mqsim-e-results-{{ssd}}.toml" ./results/iocap-raw/{{ssd}}/run*.xml

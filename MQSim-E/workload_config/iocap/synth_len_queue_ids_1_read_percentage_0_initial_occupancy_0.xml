@@ -8,8 +8,8 @@
 			<Device_Level_Data_Caching_Mode>WRITE_CACHE</Device_Level_Data_Caching_Mode>
 			<!-- PM9A3 has 8 channels -->
 			<Channel_IDs>0,1,2,3,4,5,6,7</Channel_IDs>
-			<!-- PM9A3 has 8 chips/channel -->
-			<Chip_IDs>0,1,2,3</Chip_IDs>
+			<!-- PM9A3 has 4 chips/channel TODO but artificially limit it? -->
+			<Chip_IDs>0</Chip_IDs>
 			<!-- PM9A3 has 1 die/chip -->
 			<Die_IDs>0</Die_IDs>
 			<!-- PM9A3 has 4 planes/die -->
